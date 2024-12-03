@@ -33,7 +33,7 @@ latestYear = 0
 
 
 
-for i in range(bookNum-1475,bookNum-2000,-1):
+for i in range(bookNum-2000,bookNum-2100,-1):
     print(-(i-bookNum))
     response = requests.get("https://www.gutenberg.org/ebooks/"+str(i))
 
@@ -52,8 +52,8 @@ for i in range(bookNum-1475,bookNum-2000,-1):
     language = after[languageLoc-7:languageLoc]
     language = language.lower()
     
-
     if language == "english":
+        
         if "Original Publication" in text:
             count = count + 1
             pos = text.find("Original Publication")
@@ -62,15 +62,20 @@ for i in range(bookNum-1475,bookNum-2000,-1):
             #realized some books have the year the were originally published and the year they were reprinted; for the sake of convenience, we can just ignore these
             checkReprint = after[:yearLoc]
             if "reprint" not in checkReprint.lower():
+                
                 year = after[yearLoc-6:yearLoc-2]
                 if(not year.isdigit()):
                     print("year is not number: " + str(year))
                     continue
                 if(decade(year) not in decadeCount):
+                    print("what's up doc?")
                     continue
                 #
+                ''' 
+                #used with other if to get specific year (that might be underrepresented)
                 if(decade(year) != 1800):
                     continue
+                '''
                 #
 
                 #print(year+" "+language)
@@ -87,11 +92,14 @@ for i in range(bookNum-1475,bookNum-2000,-1):
 
                 #
                 decadeCount[decade(year)] = 1
+                '''
+                #the other if mentioned before
                 if(decadeCount[1800] > 0):
                     break
+                '''
                 #
             
-    time.sleep(0.1)
+    time.sleep(0.1) #needed to not overwhelm guttenberg servers, which will result in your ip being banned
             
 
 
@@ -134,7 +142,8 @@ with open('datasetTest5.tsv', 'w', newline='', encoding="utf-8") as file:
         #writer.writerow([counter,key, years[key],decade(years[key]),title,clean_text])
         writer.writerow([key,decade(years[key]),clean_text, 1])
         counter = counter + 1
-        time.sleep(0.1)
+        print (counter)
+        time.sleep(0.1) #needed to not overwhelm guttenberg servers
 
 
 print("number in English with publication date: " + str(count))
