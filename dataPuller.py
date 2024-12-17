@@ -21,7 +21,7 @@ count = 0
 years = {}
 titles = {}
 bookNum = 74836
-#around 67000 is when most books seem to have their original publication listed
+#around 67000 is when most books seem to start have their original publication listed
 decadeCount = {}
 decadeLabels = {}
 
@@ -34,11 +34,11 @@ for i in range (1760,1980,10):
 
 
 
-
+#check range of years
 earliestYear = 3000
 latestYear = 0
 
-#used 6000
+#used -0 to -6000 to train, -6000 to -7500 for evaluate
 for i in range(bookNum-6001,bookNum-7500,-1):
     print(-(i-bookNum))
     response = requests.get("https://www.gutenberg.org/ebooks/"+str(i))
@@ -76,13 +76,9 @@ for i in range(bookNum-6001,bookNum-7500,-1):
                 if(decade(year) not in decadeCount):
                     print("not in decadeCount")
                     continue
-                #
                 
-                #used with other if to get specific year (that might be underrepresented)
-                #if(decade(year) != 1800):
-                #   continue
                 
-                #
+               
 
                 #print(year+" "+language)
                 if(int(year) < earliestYear):
@@ -90,22 +86,19 @@ for i in range(bookNum-6001,bookNum-7500,-1):
                 if(int(year) > latestYear):
                     latestYear = int(year)
                 
-                #if(decade(year) not in decadeCount):
-                #    decadeCount[decade(year)] = 0
+                
                 
                 if(decadeCount[decade(year)] <= 60):
                     years[i] = year
                     
                 decadeCount[decade(year)]+=1
                 
-                #the other if mentioned before
-                #if(decadeCount[1800] > 0):
-                #   break
+                
                 
             
     time.sleep(0.1) #needed to not overwhelm gutenberg servers, which will result in your ip being banned
 
-'''
+
 #These next two functions are to write to a tsv, so we don't have to redo data harvesting from the first half if the program breaks or is stopped in the second half
 with open('saveDict_test_eval.tsv', 'w', newline='', encoding="utf-8") as file:
     counter = 1
@@ -122,17 +115,18 @@ with open('saveDict_test_eval.tsv', 'r', newline='') as file:
         print(rowCount)
         rowCount+=1
         years[row[0]] = row[1]
-'''   
-'''
+
 with open('datasetTest_eval_HUGE.tsv', 'w', newline='', encoding="utf-8") as file:
     counter = 1
     writer = csv.writer(file, delimiter='\t')
-    #writer.writerow(["textid","book #","year","label","title","text"])
-    writer.writerow(["textid","target","text", "condition"])
-    #writer.writerow(["label","text"])
+
+    #comment in or our depending on what kind of data you need
+    #writer.writerow(["textid","book #","year","label","title","text"]) 
+    writer.writerow(["textid","target","text", "condition"]) #evaluate data
+    #writer.writerow(["label","text"]) #training data
     for key in years:
         
-        #response = requests.get("https://www.gutenberg.org/cache/epub/"+str(key)+"/pg"+str(key)+".txt")
+        #gets the plain text page
         response = requests.get("https://www.gutenberg.org/cache/epub/"+str(key)+"/pg"+str(key)+".txt")
         
         
@@ -148,6 +142,7 @@ with open('datasetTest_eval_HUGE.tsv', 'w', newline='', encoding="utf-8") as fil
         #print(str(pos1)+" "+str(pos2))
         title= clean_text[pos1+7:pos2]
 
+        #two if find the start and end and crop the text to be only that
         if "*** START OF" in clean_text:
             pos = clean_text.find("*** START OF")
             after = clean_text[pos+3:]
@@ -159,15 +154,17 @@ with open('datasetTest_eval_HUGE.tsv', 'w', newline='', encoding="utf-8") as fil
             clean_text = clean_text[:pos]
         
         #clean_text = clean_text[0:10]
-        
+
+        #same thing as before, comment in or out, make sure lines up with the header
         #writer.writerow([counter,key, years[key],decade(years[key]),title,clean_text])
-        writer.writerow([key,decade(years[key]),clean_text, 1])
-        #writer.writerow([getDecadeLabel(decade(years[key])),clean_text])
+        writer.writerow([key,decade(years[key]),clean_text, 1]) #evaluate data
+        #writer.writerow([getDecadeLabel(decade(years[key])),clean_text]) #training data
         
         print (counter)
         counter +=1
         time.sleep(0.1) #needed to not overwhelm gutenberg servers
-'''
+
+#final count at the end to see how many were found from each decade
 print("number in English with publication date: " + str(count))
 print("earliest year: "+str(earliestYear))
 print("latest Year: "+str(latestYear))
